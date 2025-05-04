@@ -197,6 +197,10 @@ mod tests {
             unimplemented!()
         }
 
+        fn render(&self) {
+            unimplemented!()
+        }
+
         fn step(&mut self, _action: Self::ActionType) -> Snapshot<Self> {
             unimplemented!()
         }
