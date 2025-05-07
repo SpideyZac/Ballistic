@@ -1,4 +1,6 @@
-mod burnrl;
-mod environment;
+mod ppo;
+mod utils;
 
-fn main() {}
+fn main() {
+    rocketsim_rs::init(None, false);
+}

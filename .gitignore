@@ -25,7 +25,4 @@ Cargo.lock
 /target
 
 # Other
-lib/
 collision_meshes/
-SDL2_gfx.dll
-SDL2.dll

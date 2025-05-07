@@ -1,0 +1,16 @@
+pub struct PPOTrainingConfig {
+    pub gamma: f32,
+    pub gae_lambda: f32,
+    pub obs_dim: usize,
+    pub action_dim: usize,
+    pub batch_size: usize,
+    pub mini_batch_size: usize,
+    pub update_epochs: usize,
+    pub clip_coef: f32,
+    pub clip_vloss: bool,
+    pub ent_coef: f32,
+    pub vf_coef: f32,
+    pub target_kl: Option<f32>,
+    pub norm_adv: bool,
+    pub max_grad_norm: f32,
+}
