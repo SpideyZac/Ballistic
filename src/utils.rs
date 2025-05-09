@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use burn::{prelude::*, tensor::Shape};
 
 pub fn tensor_std<B: Backend, const D: usize>(tensor: Tensor<B, D>) -> Tensor<B, 1> {
@@ -15,36 +17,50 @@ pub fn tensor_std<B: Backend, const D: usize>(tensor: Tensor<B, D>) -> Tensor<B,
     var_unbiased.sqrt()
 }
 
-fn calculate_index(shape: &[usize], indicies: &[usize]) -> usize {
+pub fn calculate_index(shape: &[usize], indicies: &[usize]) -> usize {
     let mut index = 0;
     let mut stride = 1;
-    for (i, dim) in shape.iter().enumerate() {
+    for (i, dim) in shape.iter().enumerate().rev() {
         index += indicies[i] * stride;
         stride *= *dim;
     }
     index
 }
 
-pub struct FloatTensorView<'a, B: Backend, const D: usize> {
-    pub tensor: &'a Tensor<B, D>,
-    pub shape: Shape,
-    pub data: Vec<f32>,
+pub fn flat_to_tensor<B: Backend, const D: usize>(
+    data: &[f32],
+    shape: &[usize],
+    device: &B::Device,
+) -> Tensor<B, D> {
+    let flat_tensor: Tensor<B, 1> = Tensor::from_floats(data, device);
+    flat_tensor.reshape::<D, [usize; D]>(
+        shape
+            .try_into()
+            .expect("Shape dimensions do not match tensor dimensions"),
+    )
 }
 
-impl<'a, B: Backend, const D: usize> FloatTensorView<'a, B, D> {
-    pub fn new(tensor: &'a Tensor<B, D>) -> Self {
+pub struct FloatTensorView<B: Backend, const D: usize> {
+    pub shape: Shape,
+    pub data: Vec<f32>,
+    pub backend: PhantomData<B>,
+}
+
+impl<B: Backend, const D: usize> FloatTensorView<B, D> {
+    pub fn new(tensor: &Tensor<B, D>) -> Self {
         let shape = tensor.shape();
         let data = tensor.to_data();
         let data = data.to_vec().unwrap();
         Self {
-            tensor,
             shape,
             data,
+            backend: PhantomData,
         }
     }
 
     pub fn get(&self, indicies: &[usize]) -> f32 {
         let index = calculate_index(&self.shape.dims, indicies);
+        println!("Index: {}", index);
 
         self.data[index]
     }
@@ -67,7 +83,7 @@ impl<'a, B: Backend, const D: usize> FloatTensorView<'a, B, D> {
         let start_index = calculate_index(&self.shape.dims, start_indicies);
         let end_index = calculate_index(&self.shape.dims, end_indicies);
 
-        for i in start_index..end_index {
+        for i in start_index..=end_index {
             slice.push(self.data[i]);
         }
 
@@ -78,10 +94,12 @@ impl<'a, B: Backend, const D: usize> FloatTensorView<'a, B, D> {
         let start_index = calculate_index(&self.shape.dims, start_indicies);
         let end_index = calculate_index(&self.shape.dims, end_indicies);
 
-        for (i, value) in (start_index..end_index).zip(values.iter()) {
+        for (i, value) in (start_index..=end_index).zip(values.iter()) {
             self.data[i] = *value;
         }
     }
 
-    // TODO: create a to_tensor method to convert the data back to a tensor
+    pub fn to_tensor(&self, device: &B::Device) -> Tensor<B, D> {
+        flat_to_tensor(&self.data, &self.shape.dims, device)
+    }
 }

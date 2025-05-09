@@ -13,4 +13,5 @@ pub struct PPOTrainingConfig {
     pub target_kl: Option<f32>,
     pub norm_adv: bool,
     pub max_grad_norm: f32,
+    pub lr: f32,
 }

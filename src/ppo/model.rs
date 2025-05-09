@@ -7,7 +7,11 @@ use burn::{
 
 use crate::ppo::distribution::NormalDistribution;
 
-fn layer_init<B: Backend>(layer: nn::LinearConfig, std_: f64, device: &B::Device) -> nn::Linear<B> {
+pub fn layer_init<B: Backend>(
+    layer: nn::LinearConfig,
+    std_: f64,
+    device: &B::Device,
+) -> nn::Linear<B> {
     layer
         .with_bias(true)
         .with_initializer(nn::Initializer::XavierUniform { gain: std_ })
